@@ -30,7 +30,7 @@ libcef_dll
 tools
 
 /installer/mac/staging/
-
+/installer/linux/staging/
 /installer/win/staging/
 *.wixpdb
 *.wixobj
