@@ -57,6 +57,11 @@ static gboolean HandleQuit(int signatl) {
   destroy();
 }
 
+bool FileExists(std::string path) {
+  struct stat buf;
+  return (stat(path.c_str(), &buf) >= 0) && (S_ISREG(buf.st_mode));
+}
+
 int GetInitialUrl() {
   GtkWidget *dialog;
      const char* dialog_title = "Please select the index.html file";
@@ -143,13 +148,16 @@ int main(int argc, char* argv[]) {
   }
 
   szInitialUrl = AppGetRunningDirectory();
-  szInitialUrl.append("/www/index.html");
+  szInitialUrl.append("/dev/src/index.html");
 
-  {
-    struct stat buf;
-    if(!(stat(szInitialUrl.c_str(), &buf) >= 0) || !(S_ISREG(buf.st_mode)))
-      if(GetInitialUrl() < 0)
+  if (!FileExists(szInitialUrl)) {
+    szInitialUrl = AppGetRunningDirectory();
+    szInitialUrl.append("/www/index.html");
+
+    if (!FileExists(szInitialUrl)) {
+      if (GetInitialUrl() < 0)
         return 0;
+    }
   }
 
   // Initialize CEF.
