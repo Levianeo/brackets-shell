@@ -14,7 +14,9 @@ fi
 rm -rf cef
 unzip cef.zip
 mv $zipname cef
-./make_symlinks.sh
+
+# make symlinks to CEF
+../scripts/make_symlinks.sh
 
 # get libudev0 for Ubuntu 13.04
 if egrep -q "13\.04" /etc/issue; then
