@@ -40,6 +40,6 @@ fi
 popd
 
 # install and run gyp to create makefile
-sudo apt-get install gyp
+sudo apt-get install gyp -qq --assume-yes
 
 gyp --depth .
