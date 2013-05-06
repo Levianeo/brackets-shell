@@ -15,9 +15,6 @@ rm -rf cef
 unzip cef.zip
 mv $zipname cef
 
-# make symlinks to CEF
-../scripts/make_symlinks.sh
-
 # get libudev0 for Ubuntu 13.04
 if egrep -q "13\.04" /etc/issue; then
   if [ ! -f libudev0.deb ]; then
@@ -38,6 +35,9 @@ fi
 ./install-build-deps.sh --no-chromeos-fonts
 
 popd
+
+# make symlinks to CEF
+./scripts/make_symlinks.sh
 
 # install and run gyp to create makefile
 sudo apt-get install gyp -qq --assume-yes
