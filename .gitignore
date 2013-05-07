@@ -2,6 +2,14 @@
 *.swp
 xcodebuild
 xcodebuild/*
+/node_modules
+/npm-debug.log
+/downloads
+
+appshell.xcodeproj
+Brackets.vcxproj
+appshell.sln
+libcef_dll_wrapper.vcxproj
 
 *.pbxuser
 *.perspective
@@ -45,3 +53,4 @@ libcef_dll_wrapper.target.mk
 appshell/gtk
 appshell/gtk/*
 
+appshell/node-core/node_modules

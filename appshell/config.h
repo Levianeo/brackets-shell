@@ -30,14 +30,27 @@
 // This must be an empty string (for no group), or a string that ends with "\\"
 #define GROUP_NAME L""
 #define APP_NAME L"Brackets"
+#define WINDOW_TITLE APP_NAME
+
+// Paths for node resources are relative to the location of the appshell executable
+#define NODE_EXECUTABLE_PATH "Brackets-node.exe"
+#define NODE_CORE_PATH "node-core"
+
 #endif
 #ifdef OS_MACOSX
 // Name of group (if any) that application prefs/settings/etc. are stored under
 // This must be an empty string (for no group), or a string that ends with "/"
 #define GROUP_NAME @""
 #define APP_NAME @"Brackets"
+#define WINDOW_TITLE APP_NAME
+
+// Paths for node resources are relative to the bundle path
+#define NODE_EXECUTABLE_PATH @"/Contents/MacOS/Brackets-node"
+#define NODE_CORE_PATH @"/Contents/node-core"
+
 #endif
 
+#define REMOTE_DEBUGGING_PORT 9234
 
 // Un-comment this line to show the toolbar UI at the top of the appshell window
 // #define SHOW_TOOLBAR_UI

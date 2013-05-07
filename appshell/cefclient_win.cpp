@@ -18,7 +18,11 @@
 #include "resource.h"
 #include "string_util.h"
 #include "client_switches.h"
+#include "native_menu_model.h"
+#include "appshell_node_process.h"
 
+#include <algorithm>
+#include <ShellAPI.h>
 #include <ShlObj.h>
 
 #define MAX_LOADSTRING 100
@@ -34,6 +38,9 @@
 // Global Variables:
 DWORD g_appStartupTime;
 HINSTANCE hInst;   // current instance
+HACCEL hAccelTable;
+HWND hWndMain;
+std::wstring gFilesToOpen; // Filenames passed as arguments to app
 TCHAR szTitle[MAX_LOADSTRING];  // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];  // the main window class name
 char szWorkingDir[MAX_PATH];  // The current working directory
@@ -79,6 +86,37 @@ void SaveWindowRect(HWND hWnd);
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd);
 void RestoreWindowPlacement(HWND hWnd, int showCmd);
 
+bool IsFilename(const std::wstring& str) {
+    // See if we can access the passed in value
+    return (GetFileAttributes(str.c_str()) != INVALID_FILE_ATTRIBUTES);
+}
+
+std::wstring GetFilenamesFromCommandLine() {
+    std::wstring result = L"[]";
+
+    if (AppGetCommandLine()->HasArguments()) {
+        bool firstEntry = true;
+        std::vector<CefString> args;
+        AppGetCommandLine()->GetArguments(args);
+        std::vector<CefString>::iterator iterator;
+
+        result = L"[";
+        for (iterator = args.begin(); iterator != args.end(); iterator++) {
+            std::wstring argument = (*iterator).ToWString();
+            if (IsFilename(argument)) {
+                if (!firstEntry) {
+                    result += L",";
+                }
+                firstEntry = false;
+                result += L"\"" + argument + L"\"";
+            }
+        }
+        result += L"]";
+    }
+
+    return result;
+}
+
 // Program entry point function.
 int APIENTRY wWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -117,12 +155,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Initialize CEF.
   CefInitialize(main_args, settings, app.get());
 
-  HACCEL hAccelTable;
-
   // Initialize global strings
   LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
   LoadString(hInstance, IDC_CEFCLIENT, szWindowClass, MAX_LOADSTRING);
-  MyRegisterClass(hInstance, settings.locale);
+  MyRegisterClass(hInstance, *(app->GetCurrentLanguage().GetStruct()));
  
   CefRefPtr<CefCommandLine> cmdLine = AppGetCommandLine();
   if (cmdLine->HasSwitch(cefclient::kStartupPath)) {
@@ -181,15 +217,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
     return FALSE;
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (settings.locale.str && (settings.locale.length > 0) &&
-      (CefString(settings.locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
+  // Start the node server process
+  startNodeProcess();
 
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(menuId));
+  gFilesToOpen = GetFilenamesFromCommandLine();
 
   int result = 0;
 
@@ -363,11 +394,68 @@ void SaveWindowRect(HWND hWnd)
 
 void RestoreWindowRect(int& left, int& top, int& width, int& height, int& showCmd)
 {
+	// Start with Registry data
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_LEFT,		NULL, left);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_TOP,		NULL, top);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_WIDTH,		NULL, width);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_HEIGHT,		NULL, height);
 	GetRegistryInt(PREF_WINPOS_FOLDER, PREF_SHOWSTATE,  NULL, showCmd);
+
+	// If window size has changed, we may need to alter window size
+	HMONITOR	hMonitor;
+	MONITORINFO	mi;
+	RECT		rcOrig, rcMax;
+
+	// Get the nearest monitor to the passed rect
+	rcOrig.left   = left;
+	rcOrig.top    = top;
+	rcOrig.right  = left + width;
+	rcOrig.bottom = top  + height;
+	hMonitor = MonitorFromRect(&rcOrig, MONITOR_DEFAULTTONEAREST);
+
+	// Get the monitor rect
+	mi.cbSize = sizeof(mi);
+	GetMonitorInfo(hMonitor, &mi);
+	rcMax = mi.rcMonitor;
+
+	if (showCmd == SW_MAXIMIZE)
+	{
+		// For maximized case, just use monitor dimensions
+		left   = rcMax.left;
+		top    = rcMax.top;
+		width  = rcMax.right  - rcMax.left;
+		height = rcMax.bottom - rcMax.top;
+	}
+	else
+	{
+		// For non-maximized case, adjust window to fit on screen
+
+		// make sure width fits
+		int rcMaxWidth = static_cast<int>(rcMax.right - rcMax.left);
+		if (width > rcMaxWidth)
+			width = rcMaxWidth;
+
+		// make sure left is on screen
+		if (left < rcMax.left)
+			left = static_cast<int>(rcMax.left);
+
+		// make sure right is on screen
+		if ((left + width) > rcMax.right)
+			left = static_cast<int>(rcMax.right) - width;
+
+		// make sure height fits
+		int rcMaxHeight = static_cast<int>(rcMax.bottom - rcMax.top);
+		if (height > rcMaxHeight)
+			height = rcMaxHeight;
+
+		// make sure top is on screen
+		if (top < rcMax.top)
+			top = static_cast<int>(rcMax.top);
+
+		// make sure bottom is on screen
+		if ((top + height) > rcMax.bottom)
+			top = static_cast<int>(rcMax.bottom) - height;
+	}
 }
 
 void RestoreWindowPlacement(HWND hWnd, int showCmd)
@@ -421,14 +509,6 @@ void RestoreWindowPlacement(HWND hWnd, int showCmd)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 
-  // Temporary localization hack. Default to English. Check for French.
-  DWORD menuId = IDC_CEFCLIENT;
-  if (locale.str && (locale.length > 0) &&
-      (CefString(locale.str) == CefString("fr-FR")))
-  {
-	  menuId = IDC_CEFCLIENT_FR;
-  }
-
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -441,7 +521,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
   wcex.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
   wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-  wcex.lpszMenuName  = MAKEINTRESOURCE(menuId);
+  wcex.lpszMenuName  = NULL;
   wcex.lpszClassName = szWindowClass;
   wcex.hIconSm       = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -459,8 +539,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const cef_string_t& locale) {
 //        create and display the main program window.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
-  HWND hWnd;
-
   hInst = hInstance;  // Store instance handle in our global variable
 
   // TODO: test this cases:
@@ -476,16 +554,29 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   DWORD styles = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
   if (showCmd == SW_MAXIMIZE)
 	  styles |= WS_MAXIMIZE;
-  hWnd = CreateWindow(szWindowClass, szTitle, styles,
+  hWndMain = CreateWindow(szWindowClass, szTitle, styles,
                       left, top, width, height, NULL, NULL, hInstance, NULL);
 
-  if (!hWnd)
+  if (!hWndMain)
     return FALSE;
 
-  RestoreWindowPlacement(hWnd, showCmd);
-  UpdateWindow(hWnd);
-
+  DragAcceptFiles(hWndMain, TRUE);
+  RestoreWindowPlacement(hWndMain, showCmd);
+  UpdateWindow(hWndMain);
+\
   return TRUE;
+}
+
+LRESULT HandleDropFiles(HDROP hDrop, CefRefPtr<ClientHandler> handler, CefRefPtr<CefBrowser> browser) {
+    UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+    for (UINT i = 0; i < fileCount; i++) {
+        wchar_t filename[MAX_PATH];
+        DragQueryFile(hDrop, i, filename, MAX_PATH);
+        std::wstring pathStr(filename);
+        replace(pathStr.begin(), pathStr.end(), '\\', '/');
+        handler->SendOpenFileCommand(browser, CefString(pathStr));
+    }
+    return 0;
 }
 
 //
@@ -675,6 +766,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
           browser->StopLoad();
         return 0;
 #endif // SHOW_TOOLBAR_UI
+      default:
+          ExtensionString commandId = NativeMenuModel::getInstance(getMenuParent(g_handler->GetBrowser())).getCommandId(wmId);
+          if (commandId.size() > 0) {
+              CefRefPtr<CommandCallback> callback = new EditCommandCallback(g_handler->GetBrowser(), commandId);
+              g_handler->SendJSCommand(g_handler->GetBrowser(), commandId, callback);
+          }
       }
       break;
     }
@@ -761,6 +858,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam,
       // The frame window has exited
       PostQuitMessage(0);
       return 0;
+
+    case WM_DROPFILES:
+        if (g_handler.get()) {
+            return HandleDropFiles((HDROP)wParam, g_handler, g_handler->GetBrowser());
+        }
+        return 0;
+
+    case WM_INITMENUPOPUP:
+        HMENU menu = (HMENU)wParam;
+        int count = GetMenuItemCount(menu);
+        void* menuParent = getMenuParent(g_handler->GetBrowser());
+        for (int i = 0; i < count; i++) {
+            UINT id = GetMenuItemID(menu, i);
+
+            bool enabled = NativeMenuModel::getInstance(menuParent).isMenuItemEnabled(id);
+            UINT flagEnabled = enabled ? MF_ENABLED | MF_BYCOMMAND : MF_DISABLED | MF_BYCOMMAND;
+            EnableMenuItem(menu, id,  flagEnabled);
+
+            bool checked = NativeMenuModel::getInstance(menuParent).isMenuItemChecked(id);
+            UINT flagChecked = checked ? MF_CHECKED | MF_BYCOMMAND : MF_UNCHECKED | MF_BYCOMMAND;
+            CheckMenuItem(menu, id, flagChecked);
+        }
+        break;
     }
 
     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -796,4 +916,59 @@ CefString AppGetCachePath() {
   cachePath +=  L"/cef_data";
 
   return CefString(cachePath);
+}
+
+// Helper function for AppGetProductVersionString. Reads version info from
+// VERSIONINFO and writes it into the passed in std::wstring.
+void GetFileVersionString(std::wstring &retVersion) {
+  DWORD dwSize = 0;
+  BYTE *pVersionInfo = NULL;
+  VS_FIXEDFILEINFO *pFileInfo = NULL;
+  UINT pLenFileInfo = 0;
+
+  HMODULE module = GetModuleHandle(NULL);
+  TCHAR executablePath[MAX_PATH];
+  GetModuleFileName(module, executablePath, MAX_PATH);
+
+  dwSize = GetFileVersionInfoSize(executablePath, NULL);
+  if (dwSize == 0) {
+    return;
+  }
+
+  pVersionInfo = new BYTE[dwSize];
+
+  if (!GetFileVersionInfo(executablePath, 0, dwSize, pVersionInfo)) 	{
+    delete[] pVersionInfo;
+    return;
+  }
+
+  if (!VerQueryValue(pVersionInfo, TEXT("\\"), (LPVOID*) &pFileInfo, &pLenFileInfo)) {
+    delete[] pVersionInfo;
+    return;
+  }
+
+  int major  = (pFileInfo->dwFileVersionMS >> 16) & 0xffff ;
+  int minor  = (pFileInfo->dwFileVersionMS) & 0xffff;
+  int hotfix = (pFileInfo->dwFileVersionLS >> 16) & 0xffff;
+  int other  = (pFileInfo->dwFileVersionLS) & 0xffff;
+
+  delete[] pVersionInfo;
+
+  std::wostringstream versionStream(L"");
+  versionStream << major << L"." << minor << L"." << hotfix << L"." << other; 
+  retVersion = versionStream.str();
+}
+
+CefString AppGetProductVersionString() {
+  std::wstring s(APP_NAME);
+  size_t i = s.find(L" ");
+  while (i != std::wstring::npos) {
+    s.erase(i, 1);
+    i = s.find(L" ");
+  }
+  std::wstring version(L"");
+  GetFileVersionString(version);
+  s.append(L"/");
+  s.append(version);
+  return CefString(s);
 }

@@ -146,6 +146,10 @@ int32 OpenURLInDefaultBrowser(ExtensionString url)
     return NO_ERROR;
 }
 
+int32 IsNetworkDrive(ExtensionString path, bool& isRemote)
+{
+}
+
 int32 ShowOpenDialog(bool allowMultipleSelection,
                      bool chooseDirectory,
                      ExtensionString title,
@@ -380,4 +384,48 @@ int ConvertLinuxErrorCode(int errorCode, bool isReading)
     default:
         return ERR_UNKNOWN;
     }
+}
+
+
+int32 GetPendingFilesToOpen(ExtensionString& files)
+{
+}
+
+int32 AddMenu(CefRefPtr<CefBrowser> browser, ExtensionString title, ExtensionString command,
+              ExtensionString position, ExtensionString relativeId)
+{
+}
+
+int32 AddMenuItem(CefRefPtr<CefBrowser> browser, ExtensionString parentCommand, ExtensionString itemTitle,
+                  ExtensionString command, ExtensionString key, ExtensionString displayStr,
+                  ExtensionString position, ExtensionString relativeId)
+{
+}
+
+int32 RemoveMenu(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+}
+
+int32 RemoveMenuItem(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId)
+{
+}
+
+int32 GetMenuItemState(CefRefPtr<CefBrowser> browser, ExtensionString commandId, bool& enabled, bool& checked, int& index)
+{
+}
+
+int32 SetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString menuTitle)
+{
+}
+
+int32 GetMenuTitle(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString& menuTitle)
+{
+}
+
+int32 SetMenuItemShortcut(CefRefPtr<CefBrowser> browser, ExtensionString commandId, ExtensionString shortcut, ExtensionString displayStr)
+{
+}
+
+int32 GetMenuPosition(CefRefPtr<CefBrowser> browser, const ExtensionString& commandId, ExtensionString& parentId, int& index)
+{
 }

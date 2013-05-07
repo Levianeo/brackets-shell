@@ -93,3 +93,19 @@ bool ClientHandler::CanCloseBrowser(CefRefPtr<CefBrowser> browser) {
 	return true;
 }
 
+bool ClientHandler::OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
+                                  const CefKeyEvent& event,
+                                  CefEventHandle os_event,
+                                  bool* is_keyboard_shortcut) {
+    
+    // TODO
+    return false;
+}
+
+bool ClientHandler::OnKeyEvent(CefRefPtr<CefBrowser> browser,
+                               const CefKeyEvent& event,
+                               CefEventHandle os_event) {
+    // TODO
+    return false;
+}
+
