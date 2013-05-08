@@ -113,6 +113,27 @@ CefString AppGetCachePath() {
   return CefString(cachePath);
 }
 
+GtkWidget* AddMenuEntry(GtkWidget* menu_widget, const char* text,
+                        GCallback callback) {
+  GtkWidget* entry = gtk_menu_item_new_with_label(text);
+  g_signal_connect(entry, "activate", callback, NULL);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_widget), entry);
+  return entry;
+}
+
+GtkWidget* CreateMenu(GtkWidget* menu_bar, const char* text) {
+  GtkWidget* menu_widget = gtk_menu_new();
+  GtkWidget* menu_header = gtk_menu_item_new_with_label(text);
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_header), menu_widget);
+  gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_header);
+  return menu_widget;
+}
+
+// Callback for Debug > Get Source... menu item.
+gboolean GetSourceActivated(GtkWidget* widget) {
+  return FALSE;
+}
+
 int main(int argc, char* argv[]) {
   CefMainArgs main_args(argc, argv);
 
@@ -169,14 +190,12 @@ int main(int argc, char* argv[]) {
 
   GtkWidget* vbox = gtk_vbox_new(FALSE, 0);
 
-#ifdef SHOW_TOOLBAR_UI
-  GtkToolItem* back = gtk_tool_button_new(NULL, NULL);
-  GtkToolItem* forward = gtk_tool_button_new(NULL, NULL);
-  GtkToolItem* reload = gtk_tool_button_new(NULL, NULL);
-  GtkToolItem* stop = gtk_tool_button_new(NULL, NULL);
+  GtkWidget* menuBar = gtk_menu_bar_new();
+  // GtkWidget* debug_menu = CreateMenu(menuBar, "Tests");
+  // AddMenuEntry(debug_menu, "Hello World Menu",
+  //              G_CALLBACK(GetSourceActivated));
 
-  GtkWidget* m_editWnd = gtk_entry_new();
-#endif // SHOW_TOOLBAR_UI
+  gtk_box_pack_start(GTK_BOX(vbox), menuBar, FALSE, FALSE, 0);
 
   g_signal_connect(G_OBJECT(window), "delete_event",
                    G_CALLBACK(HandleQuit), NULL);
@@ -190,11 +209,6 @@ int main(int argc, char* argv[]) {
   // Create the handler.
   g_handler = new ClientHandler();
   g_handler->SetMainHwnd(vbox);
-#ifdef SHOW_TOOLBAR_UI
-  g_handler->SetEditHwnd(m_editWnd);
-  g_handler->SetButtonHwnds(GTK_WIDGET(back), GTK_WIDGET(forward),
-                            GTK_WIDGET(reload), GTK_WIDGET(stop));
-#endif // SHOW_TOOLBAR_UI
 
   // Create the browser view.
   CefWindowInfo window_info;
