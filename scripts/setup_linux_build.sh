@@ -1,6 +1,6 @@
 #!/bin/bash
 
-zipname="cef_binary_3.1271.889_linux"
+zipname="cef_binary_3.1453.1255_linux32"
 
 mkdir deps
 pushd deps
