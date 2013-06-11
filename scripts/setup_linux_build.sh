@@ -7,7 +7,7 @@ pushd deps
 
 # download CEF
 if [ ! -f cef.zip ]; then
-  wget -O cef.7z https://drive.google.com/uc?export=download&id=0B7as0diokeHxMVpTOTM5NUJwemM
+  wget -O cef.7z "https://drive.google.com/uc?export=download&id=0B7as0diokeHxMVpTOTM5NUJwemM"
 fi
 
 # extract CEF 
