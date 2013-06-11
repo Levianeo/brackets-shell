@@ -7,12 +7,12 @@ pushd deps
 
 # download CEF
 if [ ! -f cef.zip ]; then
-  wget -O cef.zip https://drive.google.com/uc?export=download&id=0B7as0diokeHxMVpTOTM5NUJwemM
+  wget -O cef.7z https://drive.google.com/uc?export=download&id=0B7as0diokeHxMVpTOTM5NUJwemM
 fi
 
 # extract CEF 
 rm -rf cef
-unzip cef.zip
+7za x cef.7z
 mv $zipname cef
 
 # get libudev0 for Ubuntu 13.04
