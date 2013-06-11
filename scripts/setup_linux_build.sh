@@ -7,7 +7,7 @@ pushd deps
 
 # download CEF
 if [ ! -f cef.zip ]; then
-  wget -O cef.zip https://github.com/downloads/pritambaral/brackets-shell/$zipname-32.zip
+  wget -O cef.zip https://drive.google.com/uc?export=download&id=0B7as0diokeHxMVpTOTM5NUJwemM
 fi
 
 # extract CEF 
