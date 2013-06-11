@@ -171,13 +171,13 @@
       'appshell/appshell_extensions.js',
     ],
     'appshell_bundle_resources_linux': [
-      '$(BUILDTYPE)/locales',
+      'Resources/locales',
       'appshell/res/appshell.ico',
-      '$(BUILDTYPE)/cef.pak',
-      '$(BUILDTYPE)/devtools_resources.pak',
+      'Resources/cef.pak',
+      'Resources/devtools_resources.pak',
     ],
     'appshell_bundle_libraries_linux': [
-      '$(BUILDTYPE)/lib.target/libcef.so',
+      '$(BUILDTYPE)/libcef.so',
     ],
   },
 }
