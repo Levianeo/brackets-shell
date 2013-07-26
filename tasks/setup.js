@@ -191,14 +191,14 @@ module.exports = function (grunt) {
     // task: node-download
     grunt.registerTask("node", "Download Node.js binaries and setup dependencies", function () {
         var platform    = common.platform(),
-            config      = "node-" + platform,
+            config      = "node-" + platform + common.arch(),
             nodeSrc     = grunt.config("curl-dir." + config + ".src"),
             nodeDest    = [],
             dest        = grunt.config("curl-dir." + config + ".dest"),
-            curlTask    = "curl-dir:node-" + platform,
+            curlTask    = "curl-dir:" + config,
             setupTask   = "node-" + platform,
-            nodeVersion = grunt.config("node-version"),
-            npmVersion  = grunt.config("npm-version"),
+            nodeVersion = grunt.config("node.version"),
+            npmVersion  = grunt.config("npm.version"),
             txtName     = "version-" + nodeVersion + ".txt",
             missingDest = false;
         
@@ -231,7 +231,7 @@ module.exports = function (grunt) {
     
     function nodeWriteVersion() {
         // write empty file with node-version name
-        grunt.file.write("deps/node/version-" + grunt.config("node-version") + ".txt", "");
+        grunt.file.write("deps/node/version-" + grunt.config("node.version") + ".txt", "");
     }
     
     // task: node-win32
@@ -292,6 +292,9 @@ module.exports = function (grunt) {
             done(false);
         });
     });
+    
+    // task: node-linux
+    grunt.registerTask("node-linux", ["node-mac"]);
     
     // task: node-clean
     grunt.registerTask("node-clean", "Removes Node.js binaries", function () {

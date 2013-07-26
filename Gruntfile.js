@@ -50,6 +50,14 @@ module.exports = function (grunt) {
                 "dest"      : "downloads/",
                 "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux64_release.zip"
             },
+            "node-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x86.tar.gz"
+            },
+            "node-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "http://nodejs.org/dist/v<%= node.version %>/node-v<%= node.version %>-linux-x64.tar.gz"
+            },
             /* mac */
             "cef-mac": {
                 "dest"      : "downloads/",
