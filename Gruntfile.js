@@ -27,11 +27,12 @@ module.exports = function (grunt) {
     
     var common  = require("./tasks/common")(grunt),
         resolve = common.resolve,
+        platform = common.platform(),
         staging;
     
-    if (common.platform() === "mac") {
+    if (platform === "mac") {
         staging = "installer/mac/staging/<%= build.name %>.app/Contents";
-    } else if (common.platform() === "win") {
+    } else if (platform === "win") {
         staging = "installer/win/staging";
     } else {
         staging = "installer/linux/debian/usr/lib/brackets";
@@ -73,7 +74,7 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/brackets.deb"],
+            "installer-linux"   : ["installer/linux/*.deb", "installer/linux/debian/usr/lib"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
