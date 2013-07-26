@@ -74,7 +74,7 @@ module.exports = function (grunt) {
             "downloads"         : ["downloads"],
             "installer-mac"     : ["installer/mac/*.dmg"],
             "installer-win"     : ["installer/win/*.msi"],
-            "installer-linux"   : ["installer/linux/*.deb", "installer/linux/debian/usr/lib"],
+            "installer-linux"   : ["installer/linux/*.deb"],
             "staging-mac"       : ["installer/mac/staging"],
             "staging-win"       : ["installer/win/staging"],
             "staging-linux"     : ["<%= build.staging %>"],
