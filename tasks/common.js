@@ -234,6 +234,18 @@ module.exports = function (grunt) {
         return _platform;
     }
     
+    function arch() {
+        if (platform() === "linux") {
+            if (process.architecture === "x64") {
+                return "64";
+            } else {
+                return "32";
+            }
+        }
+        
+        return "";
+    }
+    
     function deleteFile(path, options) {
         if (grunt.file.exists(path)) {
             grunt.file.delete(path, options);
@@ -249,6 +261,7 @@ module.exports = function (grunt) {
     common.spawn = spawn;
     common.resolve = resolve;
     common.platform = platform;
+    common.arch = arch;
     common.deleteFile = deleteFile;
     common.writeJSON = writeJSON;
     
