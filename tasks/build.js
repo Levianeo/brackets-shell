@@ -28,6 +28,7 @@ module.exports = function (grunt) {
     
     var common      = require("./common")(grunt),
         q           = require("q"),
+        semver      = require("semver"),
         spawn       = common.spawn,
         resolve     = common.resolve,
         platform    = common.platform(),
@@ -265,9 +266,12 @@ module.exports = function (grunt) {
     
     // task: build-installer-linux
     grunt.registerTask("build-installer-linux", "Build linux installer", function () {
-        var done = this.async();
+        var done = this.async(),
+            sprint = semver.parse(grunt.config("pkg").version).minor;
         
         spawn(["bash build_installer.sh"], { cwd: resolve("installer/linux"), env: getBracketsEnv() }).then(function () {
+            return common.rename("installer/linux/brackets.deb", "installer/linux/Brackets Sprint " + sprint + ".deb");
+        }).then(function () {
             done();
         }, function (err) {
             grunt.log.error(err);

@@ -26,6 +26,7 @@ module.exports = function (grunt) {
     "use strict";
     
     var q               = require("q"),
+        fs              = require("fs"),
         child_process   = require("child_process"),
         path            = require("path"),
         common          = {},
@@ -264,6 +265,7 @@ module.exports = function (grunt) {
     common.arch = arch;
     common.deleteFile = deleteFile;
     common.writeJSON = writeJSON;
+    common.rename = q.denodeify(fs.rename);
     
     return common;
 };

@@ -41,7 +41,7 @@ module.exports = function (grunt) {
         },
         /* use promises instead of callbacks */
         link,
-        rename          = q.denodeify(fs.rename),
+        rename          = common.rename,
         exec            = common.exec;
     
     // cross-platform symbolic link
