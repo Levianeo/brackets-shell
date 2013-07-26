@@ -40,13 +40,15 @@ module.exports = function (grunt) {
     grunt.initConfig({
         "pkg":              grunt.file.readJSON("package.json"),
         "curl-dir": {
-            /* linux not supported yet */
-            /*
-            linux: {
-                dest        : "<%= cef_zip %>",
-                src         : "https://docs.google.com/file/d/0B7as0diokeHxeTNqZFIyNWZKSWM/edit?usp=sharing"
+            /* linux */
+            "cef-linux32": {
+                "dest"      : "downloads/",
+                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux32_release.zip"
             },
-            */
+            "cef-linux64": {
+                "dest"      : "downloads/",
+                "src"       : "https://github.com/jasonsanjose/brackets-shell/releases/download/cef-builds/cef_binary_<%= cef.version %>_linux64_release.zip"
+            },
             /* mac */
             "cef-mac": {
                 "dest"      : "downloads/",

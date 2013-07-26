@@ -78,6 +78,18 @@ module.exports = function (grunt) {
         });
     });
     
+    // task: build-linux
+    grunt.registerTask("build-linux", "Build linux shell", function () {
+        var done = this.async();
+        
+        spawn("make").then(function () {
+            done();
+        }, function (err) {
+            grunt.log.error(err);
+            done(false);
+        });
+    });
+    
     // task: git
     grunt.registerMultiTask("git", "Pull specified repo branch from origin", function () {
         var repo = this.data.repo;
